@@ -14,6 +14,7 @@ public class PlayerState : MonoBehaviour
 
     public static event Action<int> OnPlayerHealthUpdated;
     public static event Action<int> OnPlayerMoneyUpdated;
+    public static event Action<int> OnPlayerShieldUpdated;
     
     private void Awake()
     {
@@ -29,29 +30,40 @@ public class PlayerState : MonoBehaviour
     
     private void Start()
     {
-        playerShield = so_InitPlayer.playerShield;
+        playerShield = 0;
         playerHealth = so_InitPlayer.playerHealth;
         playerMoney = 4;
         OnPlayerHealthUpdated?.Invoke(playerHealth);
         OnPlayerMoneyUpdated?.Invoke(playerMoney);
+        OnPlayerShieldUpdated?.Invoke(playerShield);
         
     }
 
     public void AdjustPlayerHealth(int amount)
     {
-        playerHealth -= amount;
+        var damageRemaining = amount;
+        for (var i = 0; i < amount; i++)
+        {
+            if (playerShield < 1) break;
+            AdjustPlayerShield(-1);
+            damageRemaining--;
+        }
+        playerHealth -= damageRemaining;
         OnPlayerHealthUpdated?.Invoke(playerHealth);
     }
 
     public void AdjustPlayerShield(int amount)
     {
         playerShield += amount;
+        OnPlayerShieldUpdated?.Invoke(playerShield);
     }
 
     public void ResetPlayerShield()
     {
         playerShield = 0;
         playerMoney = 4;
+        OnPlayerMoneyUpdated?.Invoke(playerMoney);
+        OnPlayerShieldUpdated?.Invoke(playerShield);
     }
 
     public bool AdjustPlayerMoneyHasEnough(int amount)

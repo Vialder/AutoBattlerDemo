@@ -8,12 +8,14 @@ public class UITextValueSetter : MonoBehaviour
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI drawCountText;
     public TextMeshProUGUI discardCountText;
+    public TextMeshProUGUI shieldText;
     
     private void Awake()
     {
         PlayerState.OnPlayerHealthUpdated += SetPlayerHPText;
         EnemySystem.OnEnemyHealthUpdated += SetEnemyHPText;
         PlayerState.OnPlayerMoneyUpdated += SetMoneyText;
+        PlayerState.OnPlayerShieldUpdated += SetShieldText;
         //ItemDeckSystem.OnDrawCountUpdated += SetDrawCountText;
         //ItemDeckSystem.OnDiscardCountUpdated += SetDiscardCountText;
     }
@@ -23,6 +25,7 @@ public class UITextValueSetter : MonoBehaviour
         PlayerState.OnPlayerHealthUpdated -= SetPlayerHPText;
         EnemySystem.OnEnemyHealthUpdated -= SetEnemyHPText;
         PlayerState.OnPlayerMoneyUpdated -= SetMoneyText;
+        PlayerState.OnPlayerShieldUpdated -= SetShieldText;
         //ItemDeckSystem.OnDrawCountUpdated -= SetDrawCountText;
         //ItemDeckSystem.OnDiscardCountUpdated -= SetDiscardCountText;
     }
@@ -42,6 +45,11 @@ public class UITextValueSetter : MonoBehaviour
         moneyText.text = "Money: " + money;
     }
 
+    private void SetShieldText(int shield)
+    {
+        shieldText.text = "Shield: " + shield;
+    }
+    
     private void SetDrawCountText(int drawCount)
     {
         drawCountText.text = "Draw Pile: " + drawCount;

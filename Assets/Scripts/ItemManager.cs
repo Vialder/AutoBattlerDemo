@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CardArchetypes;
@@ -9,18 +11,27 @@ using UnityEngine;
 
 public class ItemManager : MonoBehaviour
 {
-    private Queue<IGameItem> itemQueue;
+    private Queue<ItemEntity> itemQueue;
     private List<IGameItem> gameItems;
+    private List<ItemEntity> itemEntities;
     private int tickDelta;
-    [SerializeField] private int tick;
     private IGameItem[] handItems;
     private Dictionary<int, int> combatCooldownDict;
+    [SerializeField] private int tick;
     public static event Action<int, IGameItem> OnItemActivated;
     public static event Action<IGameItem> OnNewItemAdded;
     public EnemySystem eSystem;
     
     private void Awake()
     {   
+        itemEntities = new List<ItemEntity>
+        {
+           null,
+           null,
+           null,
+           null,
+           null
+        };
         gameItems = new List<IGameItem>
         {
             null,
@@ -29,7 +40,7 @@ public class ItemManager : MonoBehaviour
             null,
             null
         };
-        itemQueue = new Queue<IGameItem>();
+        itemQueue = new Queue<ItemEntity>();
         ViewManager.OnItemAdded += AddItemHandler;
         DeckSystem.OnHandUpdated += UpdateHandItems;
         StateLogicControl.OnEnterCombatState += OnEnterCombatStageHandler;
@@ -51,8 +62,8 @@ public class ItemManager : MonoBehaviour
     {   
         Debug.Log("AddItemHandler");
         try
-        {
-            Debug.Log("Added: " + handItems[fromIndex].ItemName + " to position: " + toIndex);
+        {   
+            itemEntities[toIndex] = new ItemEntity(handItems[fromIndex]);;
             gameItems[toIndex] = handItems[fromIndex];
             OnNewItemAdded?.Invoke(gameItems[toIndex]);
         }
@@ -64,67 +75,65 @@ public class ItemManager : MonoBehaviour
 
     private void OnEnterCombatStageHandler()
     {
-        GenerateCombatDict();
+        ResetItems();
     }
     
-    private void GenerateCombatDict()
+    private void ResetItems()
     {   
-        combatCooldownDict = new Dictionary<int, int>();
         for (var index = 0; index < gameItems.Count; index++)
         {
             if (gameItems[index] == null) continue;
-            combatCooldownDict[index] = 0;
             OnItemActivated?.Invoke(index, gameItems[index]);
+        }
+
+        for (var index = 0; index < itemEntities.Count; index++)
+        {
+            if (itemEntities[index] == null) continue;
+            if (itemEntities[index].chargeHaver != null) itemEntities[index].charges = itemEntities[index].chargeHaver.Charges;
         }
     }
     
-    public void TickUpdateItems()
-    {
-        tick++;
-        for (var index = 0; index < gameItems.Count; index++)
-        {   
-            var c = gameItems[index];
-            if (c == null) continue;
-            if (combatCooldownDict.TryGetValue(index, out var cd))
+    public void TickUpdateItems(int t)
+    {   
+        tick = t;
+        for (var index = 0; index < itemEntities.Count; index++)
+        {
+            var e = itemEntities[index];
+            if (e == null) continue;
+            e.cooldown++;
+            if (e.cooldown >= gameItems[index].Cooldown*20)
             {   
-                if (cd >= gameItems[index].Cooldown*20)
+                if (e.chargeHaver != null && e.charges <= 0) continue;
+                if (e.chargeHaver != null && e.charges > 0)
                 {
-                    combatCooldownDict[index] = 0;
-                    itemQueue.Enqueue(c);
-                    OnItemActivated?.Invoke(index, gameItems[index]);
+                    e.charges--;
                 }
-                else
-                {
-                    combatCooldownDict[index] += 1;
-                }
+                e.cooldown = 0;
+                itemQueue.Enqueue(e);
+                OnItemActivated?.Invoke(index, gameItems[index]);
             }
         }
     }
     
     public void ProcessItemQueue(int t)
     {
-        if (itemQueue.Count == 0 || itemQueue != null)
-        {
-            while (itemQueue.Count > 0)
-            {   
-                var item =  itemQueue.Dequeue();
-                System.Reflection.MemberInfo info = item.GetType();
-                object[] attributes = info.GetCustomAttributes(true);
-                foreach (var attribute in attributes)
-                {
-                    switch (attribute)
-                    {
-                        case DamageDealer dealer:
-                            ProcessDamageDealer(dealer);
-                            break;
-                        case ShieldGiver:
-                            break;
-                        case DebugLogger debugLogger:
-                            Debug.Log(debugLogger.message);
-                            break;
-                    }
-                }
-            }
+        while (itemQueue.Count > 0)
+        {   
+           var item = itemQueue.Dequeue();
+           if (item.damageDealer != null)
+           {
+               ProcessDamageDealer(item.damageDealer);
+           }
+
+           if (item.appliesStatus != null)
+           {
+                ApplyStatus(item.appliesStatus);   
+           }
+           
+           if (item.shieldGiver != null)
+           {
+               ProcessShieldGiver(item.shieldGiver);
+           }
         }
     }
     
@@ -139,6 +148,20 @@ public class ItemManager : MonoBehaviour
                 break;
             case Target.ChosenItem:
                 break;
+        }
+    }
+
+    private void ProcessShieldGiver(ShieldGiver shieldGiver)
+    {   
+        Debug.Log("gave shields at: " + tick);
+        PlayerState.Instance.AdjustPlayerShield(shieldGiver.shieldAmount);
+    }
+
+    private void ApplyStatus(AppliesStatus status)
+    {
+        if (status.target == Target.ChosenEnemy)
+        {
+            Debug.Log("Enemy is on fire!");
         }
     }
 }

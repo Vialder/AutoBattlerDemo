@@ -93,8 +93,9 @@ public class DeckSystem : MonoBehaviour
     
     private void CreateDeck()
     {
-        AddCardToDeckInitial(new TestItem1(), 10);
-        AddCardToDeckInitial(new TestItem2(), 10);
+        AddCardToDeckInitial(new TestItem1(), 5);
+        AddCardToDeckInitial(new TestItem2(), 5);
+        AddCardToDeckInitial(new Firecracker(), 5);
     }
 
     private void AddCardToDeckInitial(IGameItem item, int amount)

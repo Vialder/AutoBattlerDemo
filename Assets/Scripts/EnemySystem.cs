@@ -10,23 +10,26 @@ public class EnemySystem : MonoBehaviour
     public RectTransform timerPanel;
     public Slider timerSlider;
     private Tween slideTween;
-    //private Queue<EnemyEffect> enemyQueue;
+    private Queue<int> enemyQueue;
     private int enemyAttacksRemaining;
     private int attackCooldown;
     private int ticksPassed;
+    [SerializeField] private int tick;
     [SerializeField] private int hp;
     public static event Action<int> OnEnemyHealthUpdated;
     
     private void Start()
-    {
+    {   
+        ticksPassed = 0;
         hp = enemy.enemyHP;
+        tick = 0;
         OnEnemyHealthUpdated?.Invoke(hp);
     }
 
     private void Awake()
     {
-        attackCooldown = 4;
-        //enemyQueue = new Queue<EnemyEffect>();
+        attackCooldown = 3;
+        enemyQueue = new Queue<int>();
         StateLogicControl.OnEnterCombatState += StartSlider;
         StateLogicControl.OnEnterShopState += ResetEnemy;
     }
@@ -62,22 +65,24 @@ public class EnemySystem : MonoBehaviour
         hp -= amount;
         OnEnemyHealthUpdated?.Invoke(hp);
     }
-    /*
-    public Queue<EnemyEffect> TickUpdateEnemies()
+    
+    public Queue<int> TickUpdateEnemies(int t)
     {
         ticksPassed++;
+        tick = t;
         if (ticksPassed >= attackCooldown * 20)
         {
-            enemyQueue.Enqueue(new EnemyEffect(1));
+            enemyQueue.Enqueue(3);
             ticksPassed = 0;
             AnimateSlider();
         }
         return enemyQueue;
     }
-    */
+    
 
     private void StartSlider()
     {
+        tick = 0;
         AnimateSlider();
     }
     

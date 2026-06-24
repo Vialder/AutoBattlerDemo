@@ -1,9 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using UnityEngine;
 using System.Reflection;
 using CardArchetypes;
+using Debug = UnityEngine.Debug;
 
 #pragma warning disable CS4014
 public class ActionProcessor : MonoBehaviour
@@ -16,9 +19,11 @@ public class ActionProcessor : MonoBehaviour
     public ItemManager iManager;
     public EnemySystem eManager;
     private PlayerState playerState;
-
     private bool isCombat = false;
-
+    private int fatigueDamage;
+    private int fatigueInterval;
+    private int ticksSinceFatigueTriggered;
+    private Queue<int> enemyQueue;
     public static event Action OnCombatEnd;
     
     private void Awake()
@@ -27,6 +32,9 @@ public class ActionProcessor : MonoBehaviour
         itemQueue = new Queue<IGameItem>();
         //enemyQueue = new Queue<EnemyEffect>();
         debugTickQueue =  new Queue<string>();
+        fatigueDamage = 1;
+        fatigueInterval = 20;
+        ticksSinceFatigueTriggered = 0;
     }
 
     private void Start()
@@ -42,7 +50,9 @@ public class ActionProcessor : MonoBehaviour
     private void StartCombatLoop()
     {
         isCombat = true;
-        TickLoop();
+        tick = 0;
+        fatigueDamage = 1;
+        StartCoroutine(CombatTicker());
     }
 
     private void EndCombat()
@@ -51,31 +61,55 @@ public class ActionProcessor : MonoBehaviour
         OnCombatEnd?.Invoke();
     }
     
-    
-    private async Awaitable TickLoop()
+    private IEnumerator CombatTicker()
     {
         while (isCombat)
         {
-            try
+            iManager.TickUpdateItems(tick);
+            iManager.ProcessItemQueue(tick);
+            ProcessFatigueDamage();
+            if (!eManager.CheckAlive())
             {
-                tick++;
-                iManager.TickUpdateItems();
-                //enemyQueue = eManager.TickUpdateEnemies();
-                iManager.ProcessItemQueue(tick);
-                if (!eManager.CheckAlive())
-                {
-                    isCombat = false;
-                    await Awaitable.WaitForSecondsAsync(0.05f, Application.exitCancellationToken);
-                    EndCombat();
-                    return;
-                }
-                await Awaitable.WaitForSecondsAsync(0.05f, Application.exitCancellationToken);
+                isCombat = false;
+                yield return new WaitForSeconds(0.05f);
+                EndCombat();
+                yield break;
             }
-            catch (Exception e)
+            enemyQueue = eManager.TickUpdateEnemies(tick);
+            ProcessEnemyQueue();
+            tick++;
+            yield return new WaitForSeconds(0.05f);
+        }
+    }
+
+    private void ProcessFatigueDamage()
+    {   
+        if (tick >= 20 * 20)
+        {
+            if (ticksSinceFatigueTriggered >= fatigueInterval)
             {
-                Debug.LogException(e);
-                break;
+                Debug.Log("Dealing Fatigue Damage: " + fatigueDamage);
+                eManager.ReduceEnemyHP(fatigueDamage);
+                PlayerState.Instance.AdjustPlayerHealth(fatigueDamage);
+                fatigueDamage++;
+                ticksSinceFatigueTriggered = 0;
             }
+            else
+            {
+                ticksSinceFatigueTriggered++;
+            }
+        }
+       
+    }
+
+    private void ProcessEnemyQueue()
+    {
+        if (enemyQueue == null) return;
+        while (enemyQueue.Count > 0)
+        {
+            var enemyEffect = enemyQueue.Dequeue();
+            PlayerState.Instance.AdjustPlayerHealth(enemyEffect);
+            //Debug.Log("Enemy deal damage at: " + tick);
         }
     }
 }

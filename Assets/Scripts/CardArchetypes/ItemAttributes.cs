@@ -34,4 +34,33 @@ namespace CardArchetypes
             this.message = message;
         }
     }
+
+    public class ChargeHaver : Attribute
+    {
+        public int Charges;
+
+        public ChargeHaver(int charges)
+        {
+            this.Charges = charges;
+        }
+    }
+
+    public class AppliesStatus : Attribute
+    {
+        public Status status;
+        public int amount;
+        public Target target;
+        public AppliesStatus(Status status, int amount, Target target)
+        {
+            this.status = status;
+            this.amount = amount;
+            this.target = target;
+        }
+    }
+
+    public class CriticalDealer : Attribute
+    {
+        public float critChance;
+        public float critDamageMod;
+    }
 }
