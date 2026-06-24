@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d2788f5ddf1afe9ca71efb5ab22d707, type: 3}
+  m_Name: InitPlayer
+  m_EditorClassIdentifier: Assembly-CSharp::SO_InitPlayer
+  deck:
+  - {fileID: 11400000, guid: 6ed8d48ce54a40440920fea525d21368, type: 2}
+  - {fileID: 11400000, guid: 6ed8d48ce54a40440920fea525d21368, type: 2}
+  - {fileID: 11400000, guid: 6ed8d48ce54a40440920fea525d21368, type: 2}
+  - {fileID: 11400000, guid: 6ed8d48ce54a40440920fea525d21368, type: 2}
+  - {fileID: 11400000, guid: 6ed8d48ce54a40440920fea525d21368, type: 2}
+  - {fileID: 11400000, guid: 6ed8d48ce54a40440920fea525d21368, type: 2}
+  - {fileID: 11400000, guid: 6ed8d48ce54a40440920fea525d21368, type: 2}
+  - {fileID: 11400000, guid: 3b9fcc5f7339ae0a0850ed36e1502017, type: 2}
+  - {fileID: 11400000, guid: 3b9fcc5f7339ae0a0850ed36e1502017, type: 2}
+  - {fileID: 11400000, guid: 3b9fcc5f7339ae0a0850ed36e1502017, type: 2}
+  - {fileID: 11400000, guid: 3b9fcc5f7339ae0a0850ed36e1502017, type: 2}
+  - {fileID: 11400000, guid: 3b9fcc5f7339ae0a0850ed36e1502017, type: 2}
+  - {fileID: 11400000, guid: 3b9fcc5f7339ae0a0850ed36e1502017, type: 2}
+  - {fileID: 11400000, guid: 3b9fcc5f7339ae0a0850ed36e1502017, type: 2}
+  - {fileID: 11400000, guid: 3b9fcc5f7339ae0a0850ed36e1502017, type: 2}
+  playerHealth: 100
+  playerMaxHealth: 100
+  playerShield: 0
